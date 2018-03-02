@@ -46,7 +46,7 @@ test_script:
   - cargo test --verbose --all
 
 before_build:
-    - ./scripts/appveyor/build-deps
+    - bash scripts/appveyor/build-deps
 
 before_deploy:
   - cargo build --release
