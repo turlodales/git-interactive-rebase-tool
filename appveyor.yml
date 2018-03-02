@@ -70,7 +70,7 @@ before_deploy:
 #  provider: GitHub
 
 artifacts:
-    - path: '*.zip'
+    - path: '**\*.zip'
 
 cache:
   - C:\Users\appveyor\.cargo\registry
