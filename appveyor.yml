@@ -34,8 +34,9 @@ environment:
 matrix:
     fast_finish: true
 
+build: off
+
 install:
-    - copy c:\MinGW\bin\mingw32-make.exe c:\MinGW\bin\make.exe
     - curl -o rustup-init.exe https://win.rustup.rs/
     - rustup-init.exe -y --default-host %TARGET% --no-modify-path
     - if defined MSYS2_BITS set PATH=%PATH%;C:\msys64\mingw%MSYS2_BITS%\bin
