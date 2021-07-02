@@ -30,7 +30,7 @@ crossterm = "0.20.0"
 lazy_static = "1.4.0"
 num-format = "0.4.0"
 pico-args = "0.4.2"
-unicode-segmentation = "1.7.1"
+unicode-segmentation = "1.8.0"
 unicode-width = "0.1.8"
 xi-unicode = "0.3.0"
 
