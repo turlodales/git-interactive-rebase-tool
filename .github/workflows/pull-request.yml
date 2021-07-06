@@ -5,6 +5,7 @@ on: [pull_request]
 jobs:
   linux:
     runs-on: [ubuntu-latest]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -12,7 +13,7 @@ jobs:
       - name: Update Rust
         run: rustup update stable
       - name: Test
-        run: cargo test
+        run: "./scripts/test.bash"
       - name: Build
         run: cargo build --release
       - name: Test Run
@@ -20,17 +21,21 @@ jobs:
 
   lint:
     runs-on: [ubuntu-latest]
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: sudo apt-get install build-essential pkg-config liblzma-dev
       - name: Lint
         run: "./scripts/lint.bash"
+      - name: Docs
+        run: "./scripts/docs.bash"
       - name: Format
         run: "./scripts/format.bash"
 
   coverage:
     runs-on: [ubuntu-latest]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
@@ -45,12 +50,13 @@ jobs:
   macos:
     name: MacOS
     runs-on: [macos-latest]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Update Rust
         run: rustup update stable
       - name: Test
-        run: cargo test --
+        run: "./scripts/test.bash"
       - name: Build
         run: cargo build --release
       - name: Test Run
@@ -59,12 +65,13 @@ jobs:
   windows:
     name: Windows Test
     runs-on: [windows-latest]
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v2
       - name: Update Rust
         run: rustup update stable
       - name: Test
-        run: cargo test --target x86_64-pc-windows-msvc --release
+        run: cargo test --target x86_64-pc-windows-msvc --release --workspace
         env:
             RUSTFLAGS: '--cap-lints warn'
       - name: Build
