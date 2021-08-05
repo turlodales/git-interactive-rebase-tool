@@ -28,7 +28,7 @@ features = ["v4"]
 
 [dev-dependencies]
 girt-config = {version = "1.0.0", path = "../config"}
-rstest = "0.10.0"
+rstest = "0.11.0"
 
 [build-dependencies]
 rustc_version = "0.4.0"
