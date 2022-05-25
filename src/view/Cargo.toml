@@ -23,7 +23,7 @@ unicode-width = "0.1.9"
 xi-unicode = "0.3.0"
 
 [dependencies.uuid]
-version = "0.8.1"
+version = "1.1.0"
 features = ["v4"]
 
 [dev-dependencies]
