@@ -4,9 +4,9 @@ version = 3
 
 [[package]]
 name = "anyhow"
-version = "1.0.50"
+version = "1.0.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ecc78c299ae753905840c5d3ba036c51f61ce5a98a83f98d9c9d29dffd427f71"
+checksum = "bb07d2053ccdbe10e2af2995a2f116c1330396493dc1269f6a91d0ae82e19704"
 
 [[package]]
 name = "arrayvec"
