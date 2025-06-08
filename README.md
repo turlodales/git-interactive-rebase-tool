@@ -5,26 +5,26 @@
 
 # Git Interactive Rebase Tool
 
-Native cross-platform full feature terminal based [sequence editor][git-sequence-editor] for interactive rebase in Git 1.7.8+.
+Native cross-platform full-featured terminal-based [sequence editor][git-sequence-editor] for interactive rebase in Git 1.7.8+.
 
 [![Git Interactive Rebase Tool](/docs/assets/images/girt-demo.gif?raw=true)](https://youtu.be/q3tzb-gQC0w)
 
 ## Table of Contents
 
-* [Features](./README.md#features)
+* [Features](#features)
 * [Install](./readme/install.md)
-* [Setup](./README.md#setup)
-* [Usage](./README.md#usage)
+* [Setup](#setup)
+* [Usage](#direct-usage)
 * [Customization](./readme/customization.md)
-* [Development](./README.md#development)
-* [Related Projects](./README.md#related-projects)
-* [License](./README.md#license)
+* [Development](#development)
+* [Related Projects](#related-projects)
+* [License](#license)
 
 ## Features
 
 ### Cross-platform
 
-Built and works on Linux, macOS, Windows and many others.
+Built and works on Linux, macOS, Windows, and many others.
 
 ### Set action
 
@@ -74,34 +74,88 @@ Need to do something in your Git editor? Quickly shell out to your editor, make 
 
 ![Shell out to editor](/docs/assets/images/girt-external-editor.gif?raw=true)
 
+### Advanced Features
+
+#### Modified line exec command
+
+This optional feature allows for the injection of an `exec` action after modified lines, where modified is determined as a changed action, command, or reference. This can be used to amend commits to update references in the commit message or run a test suite only on modified commits.
+
+To enable this option, set the `interactive-rebase-tool.postModifiedLineExecCommand` option, providing an executable or script.
+
+```shell
+git config --global interactive-rebase-tool.postModifiedLineExecCommand "/path/to/global/script"
+```
+
+Or using repository-specific configuration, for targeted scripts.
+
+```shell
+git config --global interactive-rebase-tool.postModifiedLineExecCommand "/path/to/repo/script"
+```
+
+The first argument provided to the script will always be the action performed. Then, depending on the action, the script will be provided a different set of arguments.
+
+For `drop`, `fixup`, `edit`, `pick`, `reword` and `squash` actions, the script will additionally receive the original commit hash, for `exec` the original and new commands are provided, and for `label`, `reset`, `merge`, and `update-ref` the original label/reference and new label/reference are provided.
+
+Full example of a resulting rebase todo file, assuming that `interactive-rebase-tool.postModifiedLineExecCommand` was set to `script.sh`.
+
+```
+# original line: label onto
+label new-onto
+exec script.sh "label" "onto" "new-onto"
+
+# original line: reset onto
+reset new-onto
+exec script.sh "reset" "onto" "new-onto"
+
+pick   a12345 My feature
+# original line: pick b12345 My change
+squash b12345 My change
+exec script.sh "squash" "b12345"
+
+# original line: label branch
+label branch
+exec script.sh "label" "branch" "new-branch"
+
+# original line: exec command
+exec new-command
+exec script.sh "exec" "command" "new-command"
+```
+
 ## Setup
 
 ### Most systems
 
-    git config --global sequence.editor interactive-rebase-tool
+```shell
+git config --global sequence.editor interactive-rebase-tool
+```
 
 ### Windows
 
 #### Standard Command Prompt and Windows Terminal
 
-    git config --global sequence.editor "'C:/path/to/interactive-rebase-tool.exe'"
+```shell
+git config --global sequence.editor "'C:/path/to/interactive-rebase-tool.exe'"
+```
 
-#### GitBash
+#### Git Bash
 
-GitBash requires the use of `winpty` in order to work correctly, so to set the editor use:
+Git Bash requires the use of `winpty` in order to work correctly, so to set the editor use:
 
-    git config --global sequence.editor "winpty /c/path/to/interactive-rebase-tool.exe"
+```shell
+git config --global sequence.editor "winpty /c/path/to/interactive-rebase-tool.exe"
+```
 
 #### Notes
 
 Windows before version 10 has [serious rendering issues with saturated darker colors](https://devblogs.microsoft.com/commandline/updating-the-windows-console-colors/), such as the blue color that is entirely illegible on modern displays. While it is possible to avoid using saturated colors, a better option is to update the theme using Microsoft's [ColorTool](https://github.com/Microsoft/Terminal/tree/master/src/tools/ColorTool).
 
-
 ### Temporary Override
 
 You can temporarily use a different sequence editor by using the `GIT_SEQUENCE_EDITOR` environment variable:
 
-    GIT_SEQUENCE_EDITOR=emacs git rebase -i [<upstream> [<branch>]]
+```shell
+GIT_SEQUENCE_EDITOR=emacs git rebase -i [<upstream> [<branch>]]
+```
 
 ## Direct Usage
 
@@ -113,50 +167,52 @@ interactive-rebase-tool --version
 
 ### Getting Help
 
-The tool has built-in help that can be accessed by hitting the `?` key.
+The tool has built-in help that can be accessed by using the `?` key.
 
-### Default Key Bindings
+### Common Default Key Bindings
 
-Key bindings can be configured, see [configuration](readme/customization.md#key-bindings) for more information.
+Key bindings can be customized, see [configuration](readme/customization.md#key-bindings) for all key bindings and information on configuring.
 
-| Key         | Mode   | Description                               |
-|-------------|--------|-------------------------------------------|
-| Up          | All    | Move selection up                         |
-| Down        | All    | Move selection down                       |
-| Page Up     | All    | Move selection up five lines              |
-| Page Down   | All    | Move selection down five lines            |
-| Home        | All    | Move selection to start of list           |
-| End         | All    | Move selection to home of list            |
-| `q`         | Normal | Abort interactive rebase                  |
-| `Q`         | Normal | Immediately abort interactive rebase      |
-| `w`         | Normal | Write interactive rebase file             |
-| `W`         | Normal | Immediately write interactive rebase file |
-| `?`         | All    | Show help                                 |
-| `c`         | Normal | Show commit information                   |
-| `j`         | All    | Move selected commit(s) down              |
-| `k`         | All    | Move selected commit(s) up                |
-| `b`         | Normal | Toggle break action                       |
-| `p`         | All    | Set selected commit(s) to be picked       |
-| `r`         | All    | Set selected commit(s) to be reworded     |
-| `e`         | All    | Set selected commit(s) to be edited       |
-| `s`         | All    | Set selected commit(s) to be squashed     |
-| `f`         | All    | Set selected commit(s) to be fixed-up     |
-| `d`         | All    | Set selected commit(s) to be dropped      |
-| `E`         | Normal | Edit the command of an exec action        |
-| `v`         | All    | Enter and exit visual mode                |
-| `I`         | Normal | Insert a new line                         |
-| `Delete`    | All    | Remove selected lines                     |
-| `Control+z` | All    | Undo the previous change                  |
-| `Control+y` | All    | Redo the previously undone change         |
-| Down        | Diff   | Scroll view down                          |
-| Up          | Diff   | Scroll view up                            |
-| Left        | Diff   | Scroll view left                          |
-| Right       | Diff   | Scroll view right                         |
-| Home        | Diff   | Scroll view to the top                    |
-| End         | Diff   | Scroll view to the end                    |
-| PageUp      | Diff   | Scroll view a step up                     |
-| PageDown    | Diff   | Scroll view a step down                   |
-| `d`         | Diff   | Show full commit diff                     |
+| Key         | Mode        | Description                                |
+|-------------|-------------|--------------------------------------------|
+| `?`         | All         | Show help                                  |
+| Up          | Normal/Diff | Move selection up                          |
+| Down        | Normal/Diff | Move selection down                        |
+| Page Up     | Normal/Diff | Move selection up five lines               |
+| Page Down   | Normal/Diff | Move selection down five lines             |
+| Home        | Normal/Diff | Move selection to start of list            |
+| End         | Normal/Diff | Move selection to home of list             |
+| `q`         | Normal/Diff | Abort interactive rebase                   |
+| `Q`         | Normal/Diff | Immediately abort interactive rebase       |
+| `w`         | Normal/Diff | Write interactive rebase file              |
+| `W`         | Normal/Diff | Immediately write interactive rebase file  |
+| `j`         | Normal/Diff | Move selected commit(s) down               |
+| `k`         | Normal/Diff | Move selected commit(s) up                 |
+| `b`         | Normal      | Toggle break action                        |
+| `p`         | Normal/Diff | Set selected commit(s) to be picked        |
+| `r`         | Normal/Diff | Set selected commit(s) to be reworded      |
+| `e`         | Normal/Diff | Set selected commit(s) to be edited        |
+| `s`         | Normal/Diff | Set selected commit(s) to be squashed      |
+| `f`         | Normal/Diff | Set selected commit(s) to be fixed-up      |
+| `d`         | Normal      | Set selected commit(s) to be dropped       |
+| `d`         | Diff        | Show full commit diff                      |
+| `E`         | Normal      | Edit the command of an editable action     |
+| `v`         | Normal/Diff | Enter and exit visual mode (for selection) |
+| `I`         | Normal      | Insert a new line                          |
+| `Control+d` | Normal      | Duplicate the selected line                |
+| `Delete`    | Normal/Diff | Remove selected lines                      |
+| `!`         | Normal/Diff | Open todo file in external editor          |
+| `Control+z` | Normal/Diff | Undo the previous change                   |
+| `Control+y` | Normal/Diff | Redo the previously undone change          |
+| `c`         | Normal/Diff | Show commit information                    |
+| Down        | Diff        | Scroll view down                           |
+| Up          | Diff        | Scroll view up                             |
+| Left        | Diff        | Scroll view left                           |
+| Right       | Diff        | Scroll view right                          |
+| Home        | Diff        | Scroll view to the top                     |
+| End         | Diff        | Scroll view to the end                     |
+| PageUp      | Diff        | Scroll view a step up                      |
+| PageDown    | Diff        | Scroll view a step down                    |
 
 ## Supported Platforms
 
@@ -174,9 +230,9 @@ The tool is tested in [iTerm2](https://www.iterm2.com/) and [Terminal](https://s
 
 ### Windows
 
-Supported on the latest versions of Windows 8.1 and Windows 10 and Windows 11.
+Supported on the latest versions of Windows 10 and Windows 11.
 
-The tool is tested on Windows 10 in [PowerShell](https://docs.microsoft.com/powershell/) and Command Prompt inside [Windows Console](https://docs.microsoft.com/windows/console/) and [Windows Terminal](https://docs.microsoft.com/windows/terminal/). The latest version of Git Bash provided from [Git for Windows](https://gitforwindows.org/) is also supported.
+The tool is tested on Windows 11 in [PowerShell](https://docs.microsoft.com/powershell/) and Command Prompt inside [Windows Console](https://docs.microsoft.com/windows/console/) and [Windows Terminal](https://docs.microsoft.com/windows/terminal/). The latest version of Git Bash provided from [Git for Windows](https://gitforwindows.org/) is also supported.
 
 Windows Console and Git Bash are only minimally supported, and some features or graphical glitches may occur. Windows Console running in [legacy mode](https://docs.microsoft.com/windows/console/legacymode) is not supported.
 
@@ -198,22 +254,28 @@ To start developing the project, you will need to [install Rust][install-rust], 
 
 This project uses [cargo-make](https://github.com/sagiegurari/cargo-make) as a task runner. To install:
 
-    cargo install --force cargo-make
+```shell
+cargo install --force cargo-make
+```
 
 #### Debian and derivatives
 
 If you plan to build a release package you will need `pkg-config` and `liblzma-dev`. They can be installed using `apt`:
 
-    sudo apt install pkg-config liblzma-dev
+```shell
+sudo apt install pkg-config liblzma-dev
+```
 
 ### Build and run
 
 To build or run the project, from the project root run:
 
-    # only build
-    cargo make build --release
-    # build and run
-    cargo run -- <path-to-git-rebase-todo-file>
+```shell
+# only build
+cargo make build --release
+# build and run
+cargo run -- <path-to-git-rebase-todo-file>
+```
 
 Sample rebase todo files can be found in ./test/fixtures.
 
@@ -221,59 +283,97 @@ Sample rebase todo files can be found in ./test/fixtures.
 
 Automated tests are available for all features and can be run with:
 
-    cargo make test
+```shell
+cargo make test
+```
 
 ### Docs
 
 API docs for the project are generated using Rust Doc:
 
-    cargo make docs
+```shell
+cargo make docs
+```
 
 ### Linting
 
-An addition to the lints provided by rustc, this project uses Clippy to provide additional linting, run with:
+An addition to the lints provided by `rustc`, this project uses `Clippy` to provide additional linting, run with:
 
-    cargo make lint
+```shell
+cargo make lint
+```
 
 This will run lints using stable and nightly. The nightly lints may show errors, but will not result in a failure.
 
 ### Format
 
-This project uses rust-fmt to provide a consistent format. A helpful script will ensure that all files are formatted correctly:
+This project uses `rust-fmt` to provide a consistent format. A helpful script will ensure that all files are formatted correctly:
 
-    cargo make format
+```shell
+cargo make format
+```
 
 ### Coverage
 
 The project use [Tarpaulin](https://github.com/xd009642/tarpaulin) to generate coverage reports. Coverage reports are used to find gaps in tests. To generate the coverage report:
 
-    cargo make coverage
+```shell
+cargo make coverage
+```
 
 An addition to the report printed to the CLI, an HTML report can be found in the `coverage` directory.
 
 ### Release
 
-##### Building
+#### Debian Packaging Building
 
-    cargo make deb
+```shell
+cargo make build-deb
+```
 
-A deb file will be written to `target/debian/interactive-rebase-tool_*.deb`.
+A deb file will be written to `target/debian/git-interactive-rebase-tool_*.deb`.
+
+#### RPM Building
+
+```shell
+cargo make build-rpm
+```
+
+A rpm file will be written to `target/generate-rpm/git-interactive-rebase-tool-*.deb`.
+
+#### Reproducible Builds
+
+Providing a [`SOURCE_DATE_EPOCH`](https://reproducible-builds.org/specs/source-date-epoch/#idm55) environment variable with a valid Unix timestamp, defined in seconds, will ensure a reproducible build.
 
 ## Related Projects
 
 * [rebase-editor](https://github.com/sjurba/rebase-editor) is a very similar project written in Node.js.
-* [cj-git-patchtool](https://github.com/pflanze/cj-git-patchtool) is another tool for doing git rebase en masse.
+* [cj-git-patchtool](https://github.com/pflanze/cj-git-patchtool) is another tool for doing `git rebase` en masse.
+* [andrewshadura/git-crecord](https://github.com/andrewshadura/git-crecord) provides interactive selection of changes to a commit.
 
 ## License
 
-Git Interactive Rebase Tool is released under the GPLv3 license. See [LICENSE](LICENSE).
+Copyright © 2017-2024 Tim Oram and Contributors
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+A copy of the GNU General Public License can be found in the file
+[COPYING](COPYING).
 
 See [Third Party Licenses](https://gitrebasetool.mitmaro.ca/licenses.html) for licenses of the third-party libraries used by this project.
 
 [appveyor-build]:https://ci.appveyor.com/project/MitMaro/git-interactive-rebase-tool/branch/master
 [cargo]:https://github.com/rust-lang/cargo
 [crates-io]:https://crates.io/crates/git-interactive-rebase-tool
-[git-sequence-editor]:https://git-scm.com/docs/git-config#git-config-sequenceeditor
+[git-sequence-editor]:https://git-scm.com/docs/git-config#Documentation/git-config.txt-sequenceeditor
 [install-rust]:https://doc.rust-lang.org/book/getting-started.html
 [license]:https://raw.githubusercontent.com/MitMaro/git-interactive-rebase-tool/master/LICENSE
 [releases]:https://github.com/MitMaro/git-interactive-rebase-tool/releases

@@ -3,6 +3,37 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
+## [Unreleased]
+### Fixed
+- Fix issue with search input handling that blocked setting `Esc` and `Enter` in keybindings ([#935](https://github.com/MitMaro/git-interactive-rebase-tool/pull/935))
+
+## [2.4.1] - 2024-06-26
+### Fixed
+- Renamed and copied file order reversed in show commit view ([#926](https://github.com/MitMaro/git-interactive-rebase-tool/pull/926))
+
+## [2.4.0] - 2024-06-13
+### Added
+- Add support for `NO_COLOR` environment variable ([#896](https://github.com/MitMaro/git-interactive-rebase-tool/pull/896))
+- Post modified line exec command ([#888](https://github.com/MitMaro/git-interactive-rebase-tool/pull/890))
+
+### Changed
+- List search now uses a shared search thread ([#900](https://github.com/MitMaro/git-interactive-rebase-tool/pull/900))
+
+### Fixed
+- Fixed TTY support on macOS ([#874](https://github.com/MitMaro/git-interactive-rebase-tool/pull/874))
+- Flicker when action width changes ([#888](https://github.com/MitMaro/git-interactive-rebase-tool/pull/891))
+- Selected line was not always visible when multiple lines were selected ([#918](https://github.com/MitMaro/git-interactive-rebase-tool/pull/918))
+- Selected line hidden by added trailing, leading or header line when view was not resized ([#919](https://github.com/MitMaro/git-interactive-rebase-tool/pull/919))
+
+## [2.3.0] - 2023-07-19
+### Added
+- Support for update-ref action ([#801](https://github.com/MitMaro/git-interactive-rebase-tool/pull/801))
+- Search in the list view ([#797](https://github.com/MitMaro/git-interactive-rebase-tool/pull/797))
+
+## [2.2.1] - 2022-10-13
+### Fixed
+- Crash on multibyte strings in commit diff view ([#755](https://github.com/MitMaro/git-interactive-rebase-tool/pull/755))
+
 ## [2.2.0] - 2022-04-21
 ### Added
 - Added mew keybindings for customizing the scrolling the view. ([#647](https://github.com/MitMaro/git-interactive-rebase-tool/pull/647))
@@ -58,7 +89,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [1.2.1] - 2020-01-26
 
 ### Fixed
-- ANSI color support broken on MacOS ([#219](https://github.com/MitMaro/git-interactive-rebase-tool/issues/219)) 
+- ANSI color support broken on macOS ([#219](https://github.com/MitMaro/git-interactive-rebase-tool/issues/219))
 
 ## [1.2.0] - 2020-01-11
 
@@ -94,7 +125,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## [1.0.0] - 2019-04-10
 
 ### Added
-- Support for unicode characters
+- Support for Unicode characters
 - Horizontal and vertical overflow support
 
 ### Changed
@@ -161,8 +192,12 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ### Added
 - Initial project release
 
-[Unreleased]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.2.0...HEAD
-[2.2.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.2.0...2.1.0
+[Unreleased]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.4.1...HEAD
+[2.4.1]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.4.0...2.4.1
+[2.4.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.3.0...2.4.0
+[2.3.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.2.1...2.3.0
+[2.2.1]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.2.0...2.2.1
+[2.2.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.1.0...2.2.0
 [2.1.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/2.0.0...2.1.0
 [2.0.0]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/1.2.1...2.0.0
 [1.2.1]: https://github.com/MitMaro/git-interactive-rebase-tool/compare/1.2.0...1.2.1

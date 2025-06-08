@@ -1,21 +1,23 @@
 [package]
 name = "git-interactive-rebase-tool"
-version = "2.2.0"
+version = "2.4.1"
 authors = ["Tim Oram <dev@mitmaro.ca>"]
 license = "GPL-3.0-or-later"
-description = "Full feature terminal based sequence editor for git interactive rebase."
+description = "Full-featured terminal-based sequence editor for Git interactive rebase."
 homepage = "https://gitrebasetool.mitmaro.ca/"
 repository = "https://github.com/MitMaro/git-interactive-rebase-tool"
-keywords = [ "git", "editor", "tool", "rebase", "cli" ]
+keywords = ["git", "editor", "tool", "rebase", "cli"]
 categories = ["command-line-interface", "command-line-utilities", "text-editors"]
 readme = "README.md"
 include = [
-    "**/*.rs",
-    "/Cargo.toml",
-    "/CHANGELOG.md",
-    "/LICENSE",
-    "/readme",
-    "/README.md"
+	"**/*.rs",
+	"/Cargo.toml",
+	"/CHANGELOG.md",
+	"/COPYING",
+	"/readme",
+	"/README.md",
+	"/src/interactive-rebase-tool.1",
+	"/test"
 ]
 edition = "2021"
 
@@ -23,23 +25,39 @@ edition = "2021"
 name = "interactive-rebase-tool"
 path = "src/main.rs"
 
-[workspace]
-members = [
-    "src/config",
-    "src/core",
-    "src/display",
-    "src/git",
-    "src/input",
-    "src/runtime",
-    "src/testutils",
-    "src/todo_file",
-    "src/view",
-]
-
 [dependencies]
-girt-core = {version = "2.2.0", path = "src/core"}
+anyhow = "1.0.86"
+bitflags = "2.5.0"
+captur = "1.0.1"
+chrono = "0.4.38"
+crossbeam-channel = "0.5.13"
+crossterm = "0.28.1"
+git2 = { version = "0.20.0", default-features = false, features = [] }
+if_chain = "1.0.2"
+num-format = "0.4.4"
+parking_lot = "0.12.3"
+pico-args = "0.5.0"
+thiserror = "2.0.12"
+unicode-segmentation = "1.10.1"
+unicode-width = "0.2.0"
+uuid = { version = "1.8.0", features = ["v4", "fast-rng"] }
+version-track = "1.0.0"
+xi-unicode = "0.3.0"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+crossterm = { version = "0.28.1", features = ["use-dev-tty"] }
+
+[dev-dependencies]
+claims = "0.8.0"
+itertools = "0.14.0"
+pretty_assertions = "1.4.0"
+regex = "1.8.4"
+rstest = "0.25.0"
+serial_test = "3.1.1"
+tempfile = "3.10.1"
 
 [build-dependencies]
+chrono = "0.4.38"
 rustc_version = "0.4.0"
 
 [features]
@@ -47,21 +65,174 @@ default = []
 dev = []
 
 [profile.release]
+strip = true
 incremental = true
 debug = 0
 lto = true
 codegen-units = 1
 
 [package.metadata.deb]
-license-file = ["LICENSE"]
+name = "interactive-rebase-tool"
+license-file = ["COPYING"]
 extended-description = """\
 Full feature terminal based sequence editor for git interactive rebase."""
 section = "utility"
 priority = "optional"
 assets = [
-    ["target/release/interactive-rebase-tool", "usr/bin/interactive-rebase-tool", "755"],
-    ["README.md", "usr/share/doc/interactive-rebase-tool/", "644"],
-    ["readme/**/*.md", "usr/share/doc/interactive-rebase-tool/readme/", "644"],
-    ["CHANGELOG.md", "usr/share/doc/interactive-rebase-tool/", "644"],
-    ["src/interactive-rebase-tool.1", "usr/share/man/man1/interactive-rebase-tool.1", "644"]
+	["target/release/interactive-rebase-tool", "usr/bin/interactive-rebase-tool", "755"],
+	["README.md", "usr/share/doc/interactive-rebase-tool/", "644"],
+	["readme/**/*.md", "usr/share/doc/interactive-rebase-tool/readme/", "644"],
+	["CHANGELOG.md", "usr/share/doc/interactive-rebase-tool/", "644"],
+	["src/interactive-rebase-tool.1", "usr/share/man/man1/interactive-rebase-tool.1", "644"]
 ]
+
+[package.metadata.generate-rpm]
+name = "interactive-rebase-tool"
+assets = [
+	{ source = "target/release/interactive-rebase-tool", dest = "/usr/bin/interactive-rebase-tool", mode = "755" },
+	{ source = "README.md", dest = "/usr/share/doc/interactive-rebase-tool/", mode = "644" },
+	{ source = "readme/*.md", dest = "/usr/share/doc/interactive-rebase-tool/readme/", mode = "644" },
+	{ source = "CHANGELOG.md", dest = "/usr/share/doc/interactive-rebase-tool/", mode = "644" },
+	{ source = "COPYING", dest = "/usr/share/doc/interactive-rebase-tool/", mode = "644" },
+	{ source = "src/interactive-rebase-tool.1", dest = "/usr/share/man/man1/interactive-rebase-tool.1", mode = "644" },
+]
+
+[lints.rust]
+deprecated_safe = { level = "warn", priority = -2 }
+future_incompatible = { level = "warn", priority = -2 }
+keyword_idents = { level = "warn", priority = -3 }
+let_underscore = { level = "warn", priority = -2 }
+nonstandard_style = { level = "warn", priority = -2 }
+# refiing_impl_trait - Not needed for this project
+rust_2018_compatibility = { level = "warn", priority = -2 }
+rust_2018_idioms = { level = "warn", priority = -2 }
+rust_2021_compatibility = { level = "warn", priority = -2 }
+rust_2024_compatibility = { level = "warn", priority = -2 }
+unused = { level = "warn", priority = -2 }
+
+unknown_lints = { level = "warn", priority = -1 }
+renamed_and_removed_lints = { level = "warn", priority = -1 }
+
+# Allow certain configs in the check-cfg linting
+unexpected_cfgs = { level = "warn", check-cfg = ["cfg(tarpaulin_include)"] }
+
+# absolute_paths_not_starting_with_crate - group rust_2018_compatibility
+ambiguous_negative_literals = "warn"
+closure_returning_async_block = "warn"
+# deprecated_in_future - internal lint, not for user code
+# deprecated_safe_2024 - group: deprecated_safe
+edition-2024-expr-fragment-specifier = "allow" # migration not needed
+# elided_lifetimes_in_paths - group: rust_2018_idioms
+# explicit_outlives_requirements - group: rust_2018_idioms
+ffi_unwind_calls = "warn"
+# fuzzy_provenance_casts - unstable
+if_let_rescope = "allow" # migration not needed
+impl_trait_overcaptures = "warn"
+impl_trait_redundant_captures = "warn"
+# keyword_idents_2018 - group: rust_2018_compatibility
+# keyword_idents_2024 - group: rust_2024_compatibility
+# let_underscore_drop - group: let_underscore
+# lossy_provenance_casts - unstable
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_abi = "warn"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+# missing_docs - not requiring docs in this project
+# missing-unsafe-on-extern - group: rust_2024_compatibility
+# multiple_supertrait_upcastable - unstable
+# must_not_suspend - unstable
+non_ascii_idents = "warn"
+# non_exhaustive_omitted_patterns - unstable
+redundant_imports = "warn"
+redundant_lifetimes = "warn"
+# rust_2021_incompatible_closure_captures - group: rust_2021_compatibility
+# rust_2021_incompatible_or_patterns - group: rust_2021_compatibility
+# rust_2021_prefixes_incompatible_syntax - group: rust_2021_compatibility
+# rust_2021_prelude_collisions - group: rust_2021_compatibility
+# rust_2024_guarded_string_incompatible_syntax - group: rust_2024_compatibility
+# rust_2024_incompatible_pat - group: rust_2024_compatibility
+# rust_2024_prelude_collisions - group: rust_2024_compatibility
+single_use_lifetimes = "warn"
+tail_expr_drop_order = "allow" # migration not needed
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unit-bindings = "warn"
+unnameable_types = "warn"
+# unqualified_local_imports = "warn" - unstable
+unreachable_pub = "warn"
+# unsafe_attr_outside_unsafe - group: rust_2024_compatibility
+unsafe_code = "warn"
+# unsafe_op_in_unsafe_fn - group: rust_2024_compatibility
+# unstable_features - deprecated
+unused_crate_dependencies = "warn"
+# unused_extern_crates - group: unused, rust_2018_idioms
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+# unused_macro_rules - group: unused
+unused_qualifications = "warn"
+unused_results = "warn"
+variant_size_differences = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -2 }
+cargo = { level = "warn", priority = -2 }
+pedantic = { level = "warn", priority = -2 }
+restriction = { level = "warn", priority = -2 }
+
+# Clippy restricts enabling restricted lints
+blanket_clippy_restriction_lints = { level = "allow", priority = 5 }
+
+absolute_paths = "allow"
+arbitrary_source_item_ordering = "allow" # requires major refactor, perhaps someday
+arithmetic_side_effects = "allow"
+as_conversions = "allow"
+bool_to_int_with_if = "allow"
+default_numeric_fallback = "allow"
+else_if_without_else = "allow"
+expect_used = "allow"
+field_scoped_visibility_modifiers = "allow" # too strict
+float_arithmetic = "allow"
+implicit_return = "allow"
+indexing_slicing = "allow"
+integer_division_remainder_used = "allow"
+map_err_ignore = "allow"
+min_ident_chars = "allow"
+missing_docs_in_private_items = "allow"
+missing_trait_methods = "allow"
+module_name_repetitions = "allow"
+needless_raw_string_hashes = "allow"
+needless_raw_strings = "allow"
+new_without_default = "allow"
+non_ascii_literal = "allow"
+cfg_not_test = "allow"
+option_if_let_else = "allow"
+pattern_type_mismatch = "allow"
+pub_use = "allow"
+pub_with_shorthand = "allow"
+question_mark_used = "allow"
+redundant_closure_call = "allow"
+redundant_closure_for_method_calls = "allow"
+redundant_pub_crate = "allow"
+ref_patterns = "allow"
+self_named_module_files = "allow"
+semicolon_outside_block = "allow"
+single_call_fn = "allow"
+std_instead_of_alloc = "allow"
+std_instead_of_core = "allow"
+tabs_in_doc_comments = "allow"
+tests_outside_test_module = "allow"
+too_many_lines = "allow"
+unused_self = "allow"
+unwrap_used = "allow"
+used_underscore_items = "allow" # See: https://github.com/rust-lang/rust-clippy/issues/13478
+wildcard_enum_match_arm = "allow"
+
+[lints.rustdoc]
+bare_urls = "warn"
+broken_intra_doc_links = "warn"
+invalid_codeblock_attributes = "warn"
+invalid_html_tags = "warn"
+missing_crate_level_docs = "allow"
+private_doc_tests = "warn"
+private_intra_doc_links = "warn"

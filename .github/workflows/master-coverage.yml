@@ -7,28 +7,22 @@ on:
 
 jobs:
   coverage:
-    runs-on: [ ubuntu-latest ]
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
+      - uses: actions/checkout@v3
+      - uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: "nightly"
-          profile: minimal
-          override: true
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@v2
+      - uses: baptiste0928/cargo-install@v2
+        with:
+          crate: cargo-tarpaulin
       - name: Run cargo-tarpaulin
-        uses: actions-rs/tarpaulin@v0.1
-        with:
-          timeout: 10
-          out-type: Lcov
-          args: '--workspace --all-features --ignore-tests --line --output-dir coverage'
+        run: |
+          cargo +nightly tarpaulin --ignore-tests --line --output-dir coverage --timeout 10 --out Lcov
       - name: Post to Coveralls
-        uses: coverallsapp/github-action@master
+        uses: coverallsapp/github-action@v2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           path-to-lcov: "coverage/lcov.info"
-      - name: Archive code coverage results
-        uses: actions/upload-artifact@v1
-        with:
-          name: code-coverage-report
-          path: coverage/lcov.info

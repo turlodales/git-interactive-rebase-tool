@@ -1,195 +1,324 @@
 name: Release Packages
 
 on:
-    release:
-        types: [published]
+  release:
+    types: [ published ]
+  push:
+    branches:
+      - master
 
 jobs:
-    build-ubuntu-legacy:
-        strategy:
-            matrix:
-                version: ['14.04', '16.04']
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        container:
-            image: 'docker://ubuntu:${{ matrix.version }}'
-        steps:
-            - name: "Get Tag Name"
-              id: ref
-              shell: bash
-              run: |
-                  ref="${{ github.ref }}";
-                  ref="${ref//refs\/heads\//}";
-                  ref="${ref//refs\/tags\//}";
-                  ref="${ref//master/dev}";
-                  echo "$ref";
-                  echo "::set-output name=name::$ref"
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "System Setup"
-              run: |
-                  apt-get update;
-                  apt-get --assume-yes -f install curl build-essential pkg-config;
-                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs  | sh -s -- --default-toolchain stable -y;
-                  $HOME/.cargo/bin/cargo install --force cargo-deb
-              env:
-                  DEBIAN_FRONTEND: noninteractive
-                  TZ: "America/St_Johns"
-            - name: "Build Deb"
-              run: $HOME/.cargo/bin/cargo +stable deb --output "target/debian/git-interactive-rebase-tool-${{ steps.ref.outputs.name }}-ubuntu-${{ matrix.version }}_amd64.deb"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: |
-                      target/debian/*.deb
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    build-ubuntu:
-        strategy:
-            matrix:
-                version: ['18.04', '20.04', '21.10']
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        container:
-            image: 'docker://ubuntu:${{ matrix.version }}'
-        steps:
-            - name: "Get Tag Name"
-              id: ref
-              shell: bash
-              run: |
-                  ref="${{ github.ref }}";
-                  ref="${ref//refs\/heads\//}";
-                  ref="${ref//refs\/tags\//}";
-                  ref="${ref//master/dev}";
-                  echo "$ref";
-                  echo "::set-output name=name::$ref"
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "System Setup"
-              run: |
-                  apt-get update;
-                  apt-get --assume-yes -f install curl build-essential pkg-config liblzma-dev;
-                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs  | sh -s -- --default-toolchain stable -y;
-                  $HOME/.cargo/bin/cargo install --force cargo-deb
-              env:
-                  DEBIAN_FRONTEND: noninteractive
-                  TZ: "America/St_Johns"
-            - name: "Build Deb"
-              run: $HOME/.cargo/bin/cargo +stable deb --output "target/debian/git-interactive-rebase-tool-${{ steps.ref.outputs.name }}-ubuntu-${{ matrix.version }}_amd64.deb"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: |
-                      target/debian/*.deb
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  update-latest-release:
+    name: Update Latest
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      release_version: ${{ steps.ref.outputs.version }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-    build-debian-legacy:
-        strategy:
-            matrix:
-                version: ['8']
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        container:
-            image: 'docker://debian:${{ matrix.version }}-slim'
-        steps:
-            - name: "Get Tag Name"
-              id: ref
-              shell: bash
-              run: |
-                  ref="${{ github.ref }}";
-                  ref="${ref//refs\/heads\//}";
-                  ref="${ref//refs\/tags\//}";
-                  ref="${ref//master/dev}";
-                  echo "$ref";
-                  echo "::set-output name=name::$ref"
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "System Setup"
-              run: |
-                  apt-get update;
-                  apt-get --assume-yes -f install curl build-essential pkg-config;
-                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs  | sh -s -- --default-toolchain stable -y;
-                  $HOME/.cargo/bin/cargo install --force cargo-deb
-              env:
-                  DEBIAN_FRONTEND: noninteractive
-                  TZ: "America/St_Johns"
-            - name: "Build Deb"
-              run: $HOME/.cargo/bin/cargo +stable deb --output "target/debian/git-interactive-rebase-tool-${{ steps.ref.outputs.name }}-debian-${{ matrix.version }}_amd64.deb"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: |
-                      target/debian/*.deb
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    build-debian:
-        strategy:
-            matrix:
-                version: ['9', '10', 'bullseye', 'sid']
-        runs-on: ubuntu-latest
-        timeout-minutes: 10
-        container:
-            image: 'docker://debian:${{ matrix.version }}-slim'
-        steps:
-            - name: "Get Tag Name"
-              id: ref
-              shell: bash
-              run: |
-                  ref="${{ github.ref }}";
-                  ref="${ref//refs\/heads\//}";
-                  ref="${ref//refs\/tags\//}";
-                  ref="${ref//master/dev}";
-                  echo "$ref";
-                  echo "::set-output name=name::$ref"
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "System Setup"
-              run: |
-                  apt-get update;
-                  apt-get --assume-yes -f install curl build-essential pkg-config liblzma-dev;
-                  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs  | sh -s -- --default-toolchain stable -y;
-                  $HOME/.cargo/bin/cargo install --force cargo-deb
-              env:
-                  DEBIAN_FRONTEND: noninteractive
-                  TZ: "America/St_Johns"
-            - name: "Build Deb"
-              run: $HOME/.cargo/bin/cargo +stable deb --output "target/debian/git-interactive-rebase-tool-${{ steps.ref.outputs.name }}-debian-${{ matrix.version }}_amd64.deb"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: |
-                      target/debian/*.deb
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    build-macos:
-        runs-on: [macos-latest]
-        timeout-minutes: 5
-        steps:
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "Build"
-              run: "cargo build --release"
-            - name: "Rename"
-              run: "cp target/release/interactive-rebase-tool target/release/macos-interactive-rebase-tool"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: target/release/macos-interactive-rebase-tool
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Update Tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh api \
+            -X PATCH \
+            --field sha=$(git rev-parse master) \
+            --field force=true \
+            repos/{owner}/{repo}/git/refs/tags/latest
 
-    build-windows:
-        runs-on: [windows-latest]
-        timeout-minutes: 10
-        steps:
-            - name: "Checkout project"
-              uses: actions/checkout@v2
-            - name: "Build"
-              run: "cargo rustc --target x86_64-pc-windows-msvc --release --bin interactive-rebase-tool"
-            - name: "Upload Release"
-              uses: softprops/action-gh-release@v1
-              with:
-                  files: target\x86_64-pc-windows-msvc\release\interactive-rebase-tool.exe
-              env:
-                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh release edit latest \
+            --tag latest \
+            --title "Latest Release ($(git rev-parse --short master))" \
+            --prerelease
+
+  build-tag:
+    name: Tag Name
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    outputs:
+      release_version: ${{ steps.ref.outputs.version }}
+    steps:
+      - name: Set Tag
+        id: ref
+        shell: bash
+        run: |
+          if [[ "${{ github.ref }}" == 'refs/heads/master' ]]; then
+            echo "version=latest" >> "$GITHUB_OUTPUT"
+          else
+            ref="${{ github.ref }}";
+            ref="${ref//refs\/heads\//}";
+            ref="${ref//refs\/tags\//}";
+            ref="${ref//master/dev}";
+            echo "version=$ref" >> "$GITHUB_OUTPUT"
+          fi
+
+  build-linux:
+    name: "Release Linux (${{ matrix.name }})"
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 10
+    needs: [ build-tag ]
+    strategy:
+      matrix:
+        include:
+          # GNU - aarch64
+          - name: gnu-aarch64
+            runner: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+            strip-bin: aarch64-linux-gnu-strip
+            deb: true
+            rpm: true
+
+          # musl - x86_64
+          - name: musl-x86_64
+            runner: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            strip-bin: x86_64-linux-musl-strip
+            deb: true
+            rpm: true
+
+          # GNU - embedded abi - hard float
+          - name: arm-gnueabihf
+            runner: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
+            strip-bin: arm-linux-gnueabihf-strip
+
+          # musl - embedded abi - hard float
+          - name: arm-musleabihf
+            runner: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+            strip-bin: arm-linux-musleabihf-strip
+
+          # musl - embedded abi - soft float
+          - name: arm-musleabi
+            runner: ubuntu-latest
+            target: armv7-unknown-linux-musleabi
+            strip-bin: arm-linux-musleabi-strip
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+
+      - name: Install Packages
+        shell: bash
+        run: .github/scripts/ubuntu-packages-install.bash
+
+      - name: Install Cross
+        shell: bash
+        run: .github/scripts/cross-install.bash
+
+      - name: Set Rust Target Variables
+        shell: bash
+        run: |
+          echo "TARGET_DIR=target/cross/${{ matrix.name }}" >> "$GITHUB_ENV"
+
+      - name: Set Rust Feature Variables
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: |
+          echo "FEATURES=--features dev" >> "$GITHUB_ENV"
+
+      - name: Build Binary
+        shell: bash
+        run: |
+          cross build --verbose --release --target-dir ${{ env.TARGET_DIR }} --target ${{ matrix.target }} ${{ env.FEATURES }}
+
+      - name: Build Binary Name
+        shell: bash
+        run: |
+          echo "BIN=${{ env.TARGET_DIR }}/${{ matrix.target }}/release/interactive-rebase-tool" >> $GITHUB_ENV
+
+      - name: Strip Release Binary
+        shell: bash
+        run: |
+          docker run --rm \
+            -v "$PWD/target:/target:Z" \
+            "ghcr.io/cross-rs/${{ matrix.target }}:main" \
+            "${{ matrix.strip-bin }}" \
+            "/$BIN"
+
+      - name: Build Archive Name
+        shell: bash
+        run: |
+          echo "ARCHIVE=linux-girt-${{ needs.build-tag.outputs.release_version }}-${{ matrix.name }}" >> $GITHUB_ENV
+
+      - name: Build Archive
+        if: matrix.runner != 'windows-latest'
+        shell: bash
+        run: .github/scripts/build-archive-unix.bash
+
+      - name: Upload Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload \
+            "${{ needs.build-tag.outputs.release_version }}" \
+            ${{ env.ASSET }} \
+            --clobber
+
+      - name: Install cargo-deb
+        if: matrix.deb
+        shell: bash
+        run: |
+          cargo install cargo-deb
+
+      - name: Build Deb
+        if: matrix.deb
+        env:
+          CARGO_TARGET_DIR: ${{ env.TARGET_DIR }}
+        run: |
+          cargo +stable deb \
+            --no-strip \
+            --no-build \
+            --target ${{ matrix.target }} \
+            --output "target/deb-girt-${{ needs.build-tag.outputs.release_version }}-${{ matrix.name }}.deb"
+
+      - name: Upload Deb
+        if: matrix.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload \
+            "${{ needs.build-tag.outputs.release_version }}" \
+            "target/deb-girt-${{ needs.build-tag.outputs.release_version }}-${{ matrix.name }}.deb" \
+            --clobber
+
+      - name: Install cargo-generate-rpm
+        if: matrix.rpm
+        shell: bash
+        run: |
+          cargo install cargo-generate-rpm
+
+      - name: Build RPM
+        if: matrix.rpm
+        run: |
+          cargo +stable generate-rpm \
+            --target-dir ${{ env.TARGET_DIR }} \
+            --target ${{ matrix.target }} \
+            --output "target/rpm-girt-${{ needs.build_tag.outputs.release_version }}-${{ matrix.name }}.rpm"
+
+      - name: Upload RPM
+        if: matrix.rpm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload \
+            "${{ needs.build-tag.outputs.release_version }}" \
+            "target/rpm-girt-${{ needs.build_tag.outputs.release_version }}-${{ matrix.name }}.rpm" \
+            --clobber
+
+  build-windows:
+    name: "Release Windows (${{ matrix.name }})"
+    runs-on: windows-latest
+    timeout-minutes: 10
+    needs: [ build-tag ]
+    strategy:
+      matrix:
+        include:
+          - name: "msvc-aarch64"
+            target: "aarch64-pc-windows-msvc"
+          - name: "msvc-x86_64"
+            target: "x86_64-pc-windows-msvc"
+          - name: "gnu-x86_64"
+            target: "x86_64-pc-windows-gnu"
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+
+      - name: Set Rust Feature Variables
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: |
+          echo "FEATURES=--features dev" >> "$GITHUB_ENV"
+
+      - name: Build
+        run: |
+          cargo rustc --target ${{ matrix.target }} --release --bin interactive-rebase-tool ${{ env.FEATURES }}
+
+      - name: Build Archive
+        shell: bash
+        env:
+          ARCHIVE: windows-girt-${{ needs.build-tag.outputs.release_version }}-${{ matrix.name }}
+          BIN: target/${{ matrix.target }}/release/interactive-rebase-tool
+        run: .github/scripts/build-archive-windows.bash
+
+      - name: Upload Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload \
+            "${{ needs.build-tag.outputs.release_version }}" \
+            ${{ env.ASSET }} \
+            --clobber
+
+  build-macos:
+    name: "Release macOS"
+    runs-on: macos-latest
+    timeout-minutes: 5
+    needs: [ build-tag ]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Set Rust Feature Variables
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        run: |
+          echo "FEATURES=--features dev" >> "$GITHUB_ENV"
+
+      - name: Build (aarch64)
+        run: |
+          cargo +stable build --release --target aarch64-apple-darwin ${{ env.FEATURES }}
+          strip target/aarch64-apple-darwin/release/interactive-rebase-tool
+
+      - name: Build (x86_64)
+        run: |
+          cargo +stable build --release --target x86_64-apple-darwin ${{ env.FEATURES }}
+          strip target/x86_64-apple-darwin/release/interactive-rebase-tool
+
+      - name: Universal Binary
+        run: |
+          mkdir -p target/universal/
+          lipo -create -output target/universal/interactive-rebase-tool target/aarch64-apple-darwin/release/interactive-rebase-tool target/x86_64-apple-darwin/release/interactive-rebase-tool
+
+      - name: Build Archive
+        shell: bash
+        env:
+          ARCHIVE: macos-girt-${{ needs.build-tag.outputs.release_version }}-universal
+          BIN: target/universal/interactive-rebase-tool
+        run: .github/scripts/build-archive-macos.bash
+
+      - name: Upload Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          gh release upload \
+            "${{ needs.build-tag.outputs.release_version }}" \
+            ${{ env.ASSET }} \
+            --clobber
